@@ -1,0 +1,5 @@
+# Ticker website design
+
+Approved in chat on 2026-10-01. Build a prerendered shadcn UI product site for Ticker, a native SwiftUI crypto menu bar app for macOS 26+. Use Astro with React controls, Tailwind, a light theme and one blue accent. Include a product preview, direct Apple Silicon DMG download, installation instructions, product limitations and privacy details. Publish original guides for menu bar crypto tracking and sourced alternatives comparisons. Avoid generic claims, repeated language, invented rankings and promises about search placement.
+
+Provide unique titles/descriptions, canonical URLs at https://ticker.megabyte.sh, sitemap, robots.txt, Open Graph images, SoftwareApplication and Article JSON-LD, semantic headings and internal links. Verify built HTML, links, structured data, responsive UI and the DMG artifact. Host on Cloudflare Pages and connect the ticker subdomain through existing Vercel DNS without replacing unrelated records. The current binary is ad-hoc signed, so disclose its installation requirements accurately.

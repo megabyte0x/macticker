@@ -1,0 +1,9 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+export async function getStaticPaths(){return (await getCollection('guides')).map(guide=>({params:{slug:guide.id},props:{guide}}))}
+const {guide} = Astro.props;
+const {Content} = await render(guide);
+const schema = {'@context':'https://schema.org','@type':'Article',headline:guide.data.title,description:guide.data.description,datePublished:guide.data.date,dateModified:guide.data.date,author:{'@type':'Organization',name:'Megabyte',url:'https://megabyte.sh'},publisher:{'@type':'Organization',name:'Megabyte',url:'https://megabyte.sh'},mainEntityOfPage:`https://ticker.megabyte.sh/guides/${guide.id}/`,image:'https://ticker.megabyte.sh/social.png'};
+---
+<Layout title={`${guide.data.title} | Ticker`} description={guide.data.description} schema={schema} article><article class="wrap page"><a class="text-link" href="/guides/">← All guides</a><h1 style="margin-top:24px">{guide.data.title}</h1><p class="lede">{guide.data.description}</p><p class="article-meta">By Megabyte · Published October 1, 2026</p><div class="prose"><Content/></div><div class="notice"><h3>Try Ticker on your Mac</h3><p>Free for Apple Silicon Macs running macOS 26 or newer.</p><a class="text-link" href="/download/">Download and installation details ↗</a></div></article></Layout>

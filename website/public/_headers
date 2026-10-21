@@ -1,0 +1,8 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+/downloads/*.dmg
+  Content-Type: application/x-apple-diskimage
+  Content-Disposition: attachment; filename="Ticker-1.0-arm64.dmg"
