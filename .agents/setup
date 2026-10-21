@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Orb setup: install the website's dependencies. The Swift app needs macOS and is not built here.
+set -euo pipefail
+cd "$(dirname "$0")/../website"
+
+lock_hash="$(sha256sum package-lock.json | cut -d' ' -f1)"
+marker="node_modules/.orb-lock-sha256"
+if [[ -f "$marker" && "$(cat "$marker")" == "$lock_hash" ]]; then
+  echo "website dependencies already match package-lock.json"
+else
+  echo "installing website dependencies"
+  time npm ci --prefer-offline --no-audit --no-fund
+  echo "$lock_hash" > "$marker"
+fi

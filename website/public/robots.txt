@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://ticker.megabyte.sh/sitemap-index.xml
+
+Sitemap: https://macticker.app/sitemap-index.xml
