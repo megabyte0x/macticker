@@ -10,33 +10,9 @@ The bundled DMG is Ticker 1.0 for Apple Silicon and macOS 26+. It is signed with
 
 ## Analytics and download counts
 
-Cloudflare Web Analytics is enabled for the macticker.app zone using automatic script injection (site tag `f914a14801ab490596877e92cc02eefa`). Do not also add a beacon to the layout: that would risk duplicate page views. Astro's CSP explicitly allows `https://static.cloudflareinsights.com`. View visits and performance in the account's [Web Analytics dashboard](https://dash.cloudflare.com/1378ab230486e0367cbcb49a0f4cec1d/web-analytics).
+Run `CLOUDFLARE_API_TOKEN=... npm run analytics` for a daily table of page views and DMG downloads over the last 7 UTC days. Use `npm run analytics -- 30` for up to 30 days. The token needs Account Analytics Read and Zone Analytics Read. The script sends one GraphQL request per 7 days. Longer ranges with a user-agent breakdown are heavily sampled, and the API rate-limit budget is small.
 
-The Web Analytics beacon does not run in DMG files. Use Cloudflare's HTTP request analytics separately to count successful file requests, including direct links and requests without JavaScript. Submit this query to `POST https://api.cloudflare.com/client/v4/graphql` with a token that has Zone Analytics Read access and ISO-8601 UTC `start` and `end` variables:
+- `pageViews` and `visits` come from Cloudflare Web Analytics. Cloudflare injects the beacon into HTML responses for the macticker.app zone; the site tag is `f914a14801ab490596877e92cc02eefa`. Do not also add a beacon to the layout, because that would duplicate page views. Astro's CSP allows `https://static.cloudflareinsights.com`. Only browsers that run JavaScript are counted. Crawlers and scanners, which make most edge requests to `/`, are not counted. Headless browsers, including our own checks, are reported separately as `automatedPageViews`. Collection began on 2026-10-22, when the CSP fix was deployed. Earlier visits were blocked by the CSP and cannot be recovered. The [Web Analytics dashboard](https://dash.cloudflare.com/1378ab230486e0367cbcb49a0f4cec1d/web-analytics) shows the same data, including headless visits.
+- `macDownloads` counts full DMG responses (GET, HTTP 200) to non-bot Mac browsers, based on zone HTTP request analytics. It is the closest available measure of installs. The app sends no install or launch signal, so actual installs are unknown. Repeat downloads by the same person are counted more than once. `otherDownloads` are from Windows, Linux, iOS and Android user agents, which cannot run the app. `automatedDownloads` are from bots, crawlers and command-line clients, such as our own release checks. `partialRequests` are HTTP 206 range responses; several can belong to one download.
 
-```graphql
-query Downloads($start: Time!, $end: Time!) {
-  viewer {
-    zones(filter: {zoneTag: "7e7c0192109e230b01b942d0bfa4af7d"}) {
-      httpRequestsAdaptiveGroups(
-        limit: 10000
-        filter: {
-          datetime_geq: $start
-          datetime_lt: $end
-          requestSource: "eyeball"
-          clientRequestHTTPHost: "macticker.app"
-          clientRequestPath: "/downloads/Ticker-1.0-arm64.dmg"
-          clientRequestHTTPMethodName: "GET"
-          edgeResponseStatus_in: [200, 206]
-        }
-      ) {
-        count
-        dimensions { date edgeResponseStatus }
-        avg { sampleInterval }
-      }
-    }
-  }
-}
-```
-
-Sum the status 200 groups for full-file responses. Report status 206 range responses separately: several ranges can belong to one download. HEAD requests, failures and redirects are excluded. These are request counts, not verified completed downloads, unique users or installations; repeat downloads, bots and our own release checks can be included. Adaptive sampling can make counts estimates (`sampleInterval` greater than 1). Query within the plan's retention and maximum query window, and export results before they expire if a long-term history is needed. This zone's history does not cover the previous ticker.megabyte.sh host or pages.dev URLs.
+Zone HTTP analytics keeps 31 days, so export results if you need a longer history. This zone's history does not include the previous ticker.megabyte.sh host or pages.dev URLs.
