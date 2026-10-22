@@ -18,6 +18,8 @@ for (const file of pages) {
   assert(canonical?.startsWith(`${site}/`) && canonical.endsWith('/'), `${file}: canonical on ${site} with trailing slash`);
   assert(html.includes(`<meta property="og:url" content="${canonical}"`), `${file}: og:url matches canonical`);
   for (const tag of ['og:image" content="https://macticker.app/social.png', 'twitter:title', 'twitter:image', 'apple-touch-icon', 'http-equiv="content-security-policy"']) assert(html.includes(tag), `${file}: ${tag}`);
+  const csp = html.match(/<meta http-equiv="content-security-policy" content="([^"]+)"/)?.[1];
+  assert.match(csp || '', /script-src [^;]*https:\/\/static\.cloudflareinsights\.com(?:\s|;)/, `${file}: allow Cloudflare's injected analytics script`);
   assert(!html.includes('ticker.megabyte.sh'), `${file}: no old host`);
   for (const m of html.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)) {
     const schema = JSON.parse(m[1]); assert.equal(schema['@context'], 'https://schema.org');
