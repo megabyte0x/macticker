@@ -1,6 +1,24 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import { getCollection } from 'astro:content';
-const guides = await getCollection('guides');
+const guides = (await getCollection('guides')).sort((a,b)=>a.id.localeCompare(b.id));
+const categories = ['Comparison','Setup','Price data'];
+const ordered = categories.flatMap(category=>guides.filter(g=>g.data.category === category));
+const site = Astro.site.href.replace(/\/$/, '');
+const schema = {'@context':'https://schema.org','@graph':[
+  {'@type':'CollectionPage','@id':`${site}/guides/#collection`,url:`${site}/guides/`,name:'Mac crypto ticker guides and comparisons',description:'Compare Mac crypto tickers, install Ticker and understand its price data.',mainEntity:{'@id':`${site}/guides/#list`}},
+  {'@type':'ItemList','@id':`${site}/guides/#list`,numberOfItems:ordered.length,itemListElement:ordered.map((g,i)=>({'@type':'ListItem',position:i+1,name:g.data.title,url:`${site}/guides/${g.id}/`}))}
+]};
 ---
-<Layout title="Mac crypto ticker guides and alternatives | Ticker" description="Compare Mac crypto tickers, set up a Bitcoin menu bar price, and understand refresh intervals and watchlist settings."><section class="page"><p class="eyebrow">Guides</p><h1>Small app.<br/>Useful details.</h1><p class="lede">How to set up a crypto ticker, choose an alternative and read the prices it shows.</p><ul class="guide-index">{guides.map(g=><li><a href={`/guides/${g.id}/`}><span class="article-meta">{g.data.category}</span><h2>{g.data.title}</h2><p>{g.data.description}</p></a></li>)}</ul></section></Layout>
+<Layout title="Mac crypto ticker guides and comparisons | Ticker" description="Compare Ticker with Coin Tick and Crypto Pro, put Bitcoin in your Mac menu bar, and understand price refreshes and stale data." schema={schema}>
+  <section class="page">
+    <p class="eyebrow">Guides & comparisons</p>
+    <h1>Mac crypto tickers.<br/>Useful details.</h1>
+    <p class="lede">Choose a ticker, set up your watchlist and understand the prices it shows.</p>
+    <p class="article-meta">Published by Ticker's maker. <a href="/about/">About Megabyte and these guides ›</a></p>
+    {categories.map(category=><section class="guide-group" aria-label={category === 'Comparison' ? 'Comparisons' : category}>
+      <h2>{category === 'Comparison' ? 'Comparisons' : category}</h2>
+      <ul class="guide-index">{ordered.filter(g=>g.data.category === category).map(g=><li><a href={`/guides/${g.id}/`}><h3>{g.data.title}</h3><p>{g.data.description}</p></a></li>)}</ul>
+    </section>)}
+  </section>
+</Layout>

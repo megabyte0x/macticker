@@ -1,0 +1,22 @@
+---
+import Layout from '../layouts/Layout.astro';
+const site = Astro.site.href.replace(/\/$/, '');
+const schema = {'@context':'https://schema.org','@type':'AboutPage',url:`${site}/about/`,name:'About Ticker and its guides',about:{'@type':'Organization','@id':'https://megabyte.sh/#organization',name:'Megabyte',url:'https://megabyte.sh'}};
+---
+<Layout title="About Ticker and its guides | Megabyte" description="Who makes Ticker, how its Mac crypto ticker guides are researched, and how to check sources or report a correction." schema={schema}>
+  <article class="page prose">
+    <h1>About Ticker<br/>and these guides.</h1>
+    <p>Ticker is a small native Mac menu bar crypto ticker by <a href="https://megabyte.sh">Megabyte</a>. It shows a selected token's USD price and a saved watchlist, without an account or API key. The current download requires macOS 26 or newer on Apple Silicon.</p>
+    <h2>Who publishes the guides?</h2>
+    <p>Megabyte publishes this website and the <a href="/guides/">setup guides and comparisons</a>. We make Ticker, so our comparisons are not independent reviews. They explain when Ticker fits and when another product better matches a reader's requirements.</p>
+    <h2>How is the content checked?</h2>
+    <p>Ticker's behavior is checked against the <a href="https://github.com/megabyte0x/macticker">project source</a>, including its controls, storage, price requests and stale-data logic. The product screenshot is rendered from the app's SwiftUI source; displayed prices are capture-time examples, not live quotes.</p>
+    <p>Competitor details come from the linked developers' product pages and App Store listings. Each comparison states when those sources were checked. Published capabilities are not hands-on test results: we have not benchmarked the apps side by side or measured their relative battery use, latency or reliability.</p>
+    <p>AI tools assist with research, drafting and technical checks. Product claims are checked against the cited sources and repository implementation. This process is not a claim of independent testing or endorsement by the products mentioned.</p>
+    <h2>Dates and corrections</h2>
+    <p>Publication dates stay unchanged when an article is revised. An updated date records a substantive change or source review, not an automatic freshness bump. Competitor features, compatibility and purchase terms can change; verify the linked listing before installing.</p>
+    <p>Report a factual problem through the <a href="https://github.com/megabyte0x/macticker/issues">project issue tracker</a>, with the page address and a source for the correction. Do not include private wallet information, credentials or API keys.</p>
+    <h2>Market data, not investment advice</h2>
+    <p>Ticker displays CoinGecko market data. It does not execute trades, hold funds or give investment recommendations. A displayed price is not a guaranteed exchange execution price. Read the <a href="/guides/crypto-price-refresh-stale-data/">price-data guide</a> and <a href="/privacy/">privacy page</a> for the app's limits and data use.</p>
+  </article>
+</Layout>

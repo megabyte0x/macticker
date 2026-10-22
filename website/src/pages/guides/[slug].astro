@@ -4,8 +4,29 @@ import { getCollection, render } from 'astro:content';
 export async function getStaticPaths(){return (await getCollection('guides')).map(guide=>({params:{slug:guide.id},props:{guide}}))}
 const {guide} = Astro.props;
 const {Content} = await render(guide);
+const guides = await getCollection('guides');
+const related = guide.data.related.map(id=>{
+  const entry = guides.find(g=>g.id === id);
+  if (!entry || id === guide.id) throw new Error(`Invalid related guide ${id} in ${guide.id}`);
+  return entry;
+});
 const site = Astro.site.href.replace(/\/$/, '');
 const url = `${site}/guides/${guide.id}/`;
-const schema = {'@context':'https://schema.org','@graph':[{'@type':'Article',headline:guide.data.title,description:guide.data.description,datePublished:guide.data.date,dateModified:guide.data.date,author:{'@type':'Organization',name:'Megabyte',url:'https://megabyte.sh'},publisher:{'@type':'Organization',name:'Megabyte',url:'https://megabyte.sh'},mainEntityOfPage:url,image:`${site}/social.png`},{'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Ticker',item:`${site}/`},{'@type':'ListItem',position:2,name:'Guides',item:`${site}/guides/`},{'@type':'ListItem',position:3,name:guide.data.title,item:url}]}]};
+const modified = guide.data.updated ?? guide.data.date;
+const formatDate = (date:string)=>new Intl.DateTimeFormat('en-US',{dateStyle:'long',timeZone:'UTC'}).format(new Date(`${date}T00:00:00Z`));
+const schema = {'@context':'https://schema.org','@graph':[
+  {'@type':'Article','@id':`${url}#article`,url,headline:guide.data.title,description:guide.data.description,datePublished:guide.data.date,dateModified:modified,inLanguage:'en',articleSection:guide.data.category,author:{'@type':'Organization','@id':'https://megabyte.sh/#organization',name:'Megabyte',url:'https://megabyte.sh'},publisher:{'@type':'Organization','@id':'https://megabyte.sh/#organization',name:'Megabyte',url:'https://megabyte.sh'},publishingPrinciples:`${site}/about/`,about:{'@id':`${site}/#app`},mainEntityOfPage:url,image:`${site}/social.png`},
+  {'@type':'BreadcrumbList',itemListElement:[{'@type':'ListItem',position:1,name:'Ticker',item:`${site}/`},{'@type':'ListItem',position:2,name:'Guides',item:`${site}/guides/`},{'@type':'ListItem',position:3,name:guide.data.title,item:url}]}
+]};
 ---
-<Layout title={`${guide.data.title} | Ticker`} description={guide.data.description} schema={schema} article><article class="page"><nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/guides/">‹ All guides</a></nav><h1 class="article-title">{guide.data.title}</h1><p class="lede">{guide.data.description}</p><p class="article-meta">By Megabyte · Published October 1, 2026</p><div class="prose"><Content/></div><div class="notice"><h3>Try Ticker on your Mac</h3><p>Free for Apple Silicon Macs running macOS 26 or newer.</p><a class="text-link" href="/download/">Download and installation details ›</a></div></article></Layout>
+<Layout title={`${guide.data.title} | Ticker`} description={guide.data.description} schema={schema} article published={guide.data.date} modified={modified}>
+  <article class="page">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Ticker</a><span aria-hidden="true">/</span><a href="/guides/">Guides</a></nav>
+    <h1 class="article-title">{guide.data.title}</h1>
+    <p class="lede">{guide.data.description}</p>
+    <p class="article-meta">By <a href="/about/">Megabyte</a> · Published <time datetime={guide.data.date}>{formatDate(guide.data.date)}</time>{guide.data.updated && <> · Updated <time datetime={guide.data.updated}>{formatDate(guide.data.updated)}</time></>}</p>
+    <div class="prose"><Content/></div>
+    {related.length > 0 && <aside class="related-guides" aria-labelledby="related-title"><h2 id="related-title">Related guides</h2><ul>{related.map(g=><li><a href={`/guides/${g.id}/`}>{g.data.title}</a></li>)}</ul></aside>}
+    <div class="notice"><h2>Try Ticker on your Mac</h2><p>Free for Apple Silicon Macs running macOS 26 or newer.</p><a class="text-link" href="/download/">Download and installation details ›</a></div>
+  </article>
+</Layout>
