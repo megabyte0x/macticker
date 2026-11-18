@@ -1,3 +1,4 @@
+import ServiceManagement
 import SwiftUI
 
 @main
@@ -29,6 +30,7 @@ struct TickerView: View {
     @State private var results: [Token] = []
     @State private var searching = false
     @State private var searchError: String?
+    @State private var updating = false
     @FocusState private var searchFocused: Bool
     @FocusState private var removeFocusedID: String?
     @State private var hoveredID: String?
@@ -67,6 +69,13 @@ struct TickerView: View {
                         }
                         .keyboardShortcut("r")
                         .disabled(store.refreshing || store.tokens.isEmpty)
+                        Toggle("Launch at Login", isOn: Binding(
+                            get: { SMAppService.mainApp.status == .enabled }, set: setLaunchAtLogin
+                        ))
+                        Button(updating ? "Updating…" : "Check for Updates…", systemImage: "arrow.down.circle") {
+                            Task { await checkForUpdates() }
+                        }
+                        .disabled(updating)
                         Divider()
                         Button("Quit Ticker", systemImage: "power") {
                             NSApplication.shared.terminate(nil)
@@ -151,6 +160,75 @@ struct TickerView: View {
         .onDisappear {
             closeSearch()
             hoveredID = nil
+        }
+    }
+
+    private func checkForUpdates() async {
+        guard !updating else { return }
+        updating = true
+        defer { updating = false }
+
+        let alert = NSAlert()
+        let installed = Bundle.main.bundleURL
+        do {
+            guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String else {
+                throw TickerUpdate.Failure.invalidVersion
+            }
+            guard let release = try await TickerUpdate.latest(after: version) else {
+                alert.messageText = "No Update Available"
+                alert.informativeText = "There’s no newer Ticker release on GitHub."
+                NSApp.activate()
+                alert.runModal()
+                return
+            }
+            alert.messageText = "Ticker \(release.tag_name) Is Available"
+            alert.informativeText = "Install the update and relaunch Ticker? Your watchlist will be kept."
+            alert.addButton(withTitle: "Install and Relaunch")
+            alert.addButton(withTitle: "Cancel")
+            NSApp.activate()
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+            try await TickerUpdate.install(release, at: installed)
+        } catch {
+            let failure = NSAlert(error: error)
+            failure.messageText = "Couldn’t Update Ticker"
+            NSApp.activate()
+            failure.runModal()
+            return
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        do {
+            _ = try await NSWorkspace.shared.openApplication(at: installed, configuration: configuration)
+            NSApp.terminate(nil)
+        } catch {
+            let relaunch = NSAlert()
+            relaunch.messageText = "Ticker Was Updated"
+            relaunch.informativeText = "Quit and reopen Ticker to finish updating."
+            NSApp.activate()
+            relaunch.runModal()
+        }
+    }
+
+    private func setLaunchAtLogin(_ enabled: Bool) {
+        let service = SMAppService.mainApp
+        let status = service.status
+
+        do {
+            if enabled && status != .enabled && status != .requiresApproval {
+                try service.register()
+            } else if !enabled && status == .enabled {
+                try service.unregister()
+            }
+        } catch {
+            if !enabled || service.status != .requiresApproval {
+                let alert = NSAlert(error: error)
+                alert.messageText = "Couldn’t change Launch at Login"
+                alert.runModal()
+            }
+        }
+        if enabled && service.status == .requiresApproval {
+            SMAppService.openSystemSettingsLoginItems()
         }
     }
 
