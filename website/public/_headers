@@ -9,4 +9,4 @@
   Cache-Control: public, max-age=31536000, immutable
 /downloads/*.dmg
   Content-Type: application/x-apple-diskimage
-  Content-Disposition: attachment; filename="Ticker-1.0-arm64.dmg"
+  Content-Disposition: attachment

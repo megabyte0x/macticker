@@ -79,5 +79,5 @@ for (const route of ['/about/', '/guides/ticker-vs-coin-tick/', '/guides/ticker-
 const staleGuide = fs.readFileSync(path.join(root, 'guides/crypto-price-refresh-stale-data/index.html'), 'utf8');
 assert(staleGuide.includes('more than ten minutes old') && !staleGuide.includes('more than three minutes old'), 'stale timestamp guidance matches the ten-minute app threshold');
 assert(fs.readFileSync(path.join(root, 'robots.txt'), 'utf8').includes(`Sitemap: ${site}/sitemap-index.xml`));
-assert(fs.statSync(path.join(root, 'downloads/Ticker-1.0-arm64.dmg')).size > 100000);
+assert(fs.statSync(path.join(root, 'downloads/Ticker-1.1.0-arm64.dmg')).size > 100000);
 console.log(`Verified ${pages.length} HTML pages, unique metadata, internal assets and links, JSON-LD, article dates, footer-only guide discovery, sitemap, robots and DMG.`);

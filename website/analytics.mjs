@@ -4,7 +4,8 @@
 const ACCOUNT = '1378ab230486e0367cbcb49a0f4cec1d';
 const ZONE = '7e7c0192109e230b01b942d0bfa4af7d';
 const SITE = 'f914a14801ab490596877e92cc02eefa';
-const DMG = '/downloads/Ticker-1.0-arm64.dmg';
+const DMG = '/downloads/Ticker-1.1.0-arm64.dmg';
+const PREVIOUS_DMG = '/downloads/Ticker-1.0-arm64.dmg';
 const AUTOMATED = /bot|crawl|spider|scan|curl|wget|python|httpx|aiohttp|axios|go-http|okhttp|java\/|node|headless|lighthouse|preview|fetch/i;
 
 const token = process.env.CLOUDFLARE_API_TOKEN;
@@ -14,7 +15,7 @@ const days = Math.min(Number(process.argv[2] || 7), 30); // zone HTTP analytics 
 // Requests are kept few because the GraphQL rate-limit budget is small.
 const today = new Date(new Date().toISOString().slice(0, 10));
 const dates = Array.from({ length: days }, (_, i) => new Date(+today - (days - 1 - i) * 864e5));
-const query = `query($account: String!, $zone: String!, $site: String!, $dmg: String!, $start: Time!, $end: Time!) {
+const query = `query($account: String!, $zone: String!, $site: String!, $dmg: String!, $previousDmg: String!, $start: Time!, $end: Time!) {
   viewer {
     accounts(filter: {accountTag: $account}) {
       rumPageloadEventsAdaptiveGroups(limit: 10000, filter: {siteTag: $site, datetime_geq: $start, datetime_lt: $end}) {
@@ -25,7 +26,7 @@ const query = `query($account: String!, $zone: String!, $site: String!, $dmg: St
       }
     }
     zones(filter: {zoneTag: $zone}) {
-      httpRequestsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball", clientRequestPath: $dmg, clientRequestHTTPMethodName: "GET", edgeResponseStatus_in: [200, 206]}) {
+      httpRequestsAdaptiveGroups(limit: 10000, filter: {datetime_geq: $start, datetime_lt: $end, requestSource: "eyeball", OR: [{clientRequestPath: $dmg}, {clientRequestPath: $previousDmg}], clientRequestHTTPMethodName: "GET", edgeResponseStatus_in: [200, 206]}) {
         count
         avg { sampleInterval }
         dimensions { date userAgent edgeResponseStatus }
@@ -36,7 +37,7 @@ const query = `query($account: String!, $zone: String!, $site: String!, $dmg: St
 const pageGroups = [], downloadGroups = [];
 for (let i = 0; i < days; i += 7) {
   const start = dates[i], end = new Date(+dates[Math.min(i + 7, days) - 1] + 864e5);
-  const variables = { account: ACCOUNT, zone: ZONE, site: SITE, dmg: DMG, start: start.toISOString(), end: end.toISOString() };
+  const variables = { account: ACCOUNT, zone: ZONE, site: SITE, dmg: DMG, previousDmg: PREVIOUS_DMG, start: start.toISOString(), end: end.toISOString() };
   const res = await fetch('https://api.cloudflare.com/client/v4/graphql', {
     method: 'POST',
     headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
